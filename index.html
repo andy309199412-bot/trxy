@@ -1,0 +1,695 @@
+import React, { useState } from 'react';
+import { MapPin, Calendar, Coffee, Sun, Camera, Info, CloudRain, Utensils, Train, Shirt, Wind, Car, Pin, Globe, FileText, Upload, ShoppingBag, ShoppingCart } from 'lucide-react';
+
+// -----------------------------------------------------------------------------
+// 旅遊主題數據 (Hong Kong Theme Data)
+// -----------------------------------------------------------------------------
+
+const PRIMARY_COLOR = '#A63A39'; // 懷舊深紅/棗紅
+const ACCENT_COLOR = '#D7C378'; // 老金色/芥末黃
+const BG_COLOR = '#FAF9FF';     // 淺奶油色
+
+const TRIP_INFO = {
+  title: "香港 • 舊時光之旅 (4天3夜)",
+  date: "2026.01.10 - 01.13", // 旅遊期間更新為 Word 文件中的日期
+  daysLeft: 5 // 假設的天數
+};
+
+// -----------------------------------------------------------------------------
+// 行程數據 (ITINERARY_DATA) - 根據 Word 文件內容更新
+// -----------------------------------------------------------------------------
+
+const ITINERARY_DATA = [
+  {
+    day: "Day 1",
+    date: "01/10",
+    location: "油麻地 & 尖沙咀",
+    attire: "長袖 T-shirt、輕便外套",
+    weatherTip: "氣溫舒適，晚上微涼 (18°C)",
+    events: [
+      { 
+        time: "16:25", 
+        category: "Transportation",
+        title: "抵達香港赤鱲角機場", 
+        desc: "出關後領取行李。重要：購買/儲值八達通 (Octopus card)。",
+        tags: ["重要", "交通"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=香港國際機場"
+      },
+      { 
+        time: "17:30", 
+        category: "Transportation",
+        title: "搭乘巴士 A21 前往飯店", 
+        desc: "於機場地面運輸中心搭車，至「文明里, 彌敦道」下車。巴士車資約 HKD $35/人。",
+        tags: ["交通"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=文明里,%20彌敦道"
+      },
+      { 
+        time: "18:40", 
+        category: "Accommodation",
+        title: "城景國際 Check-in & 休息", 
+        desc: "飯店鄰近地鐵油麻地站 A2 出口，地點便利。",
+        tags: ["酒店"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=香港城景國際"
+      },
+      { 
+        time: "19:30", 
+        category: "Food",
+        title: "晚餐：廟街夜市巡禮", 
+        desc: "步行 3 分鐘即達廟街。必吃：媽咪雞蛋仔、煎釀三寶。若想吃正餐可選興記煲仔飯。",
+        tags: ["必吃", "美食", "懷舊"],
+        photoTip: "拍攝夜市中昏黃燈光下的攤位和人潮，充滿港片懷舊感。",
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=香港廟街夜市"
+      },
+      { 
+        time: "21:00", 
+        category: "Sightseeing",
+        title: "尖沙咀海旁夜景", 
+        desc: "搭乘地鐵至尖沙咀，或沿彌敦道散步約 20 分鐘，欣賞維多利亞港夜景。",
+        tags: ["景點", "必拍"],
+        photoTip: "必拍：尖沙咀鐘樓和對岸中銀大廈的經典角度。",
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=尖沙咀海旁"
+      }
+    ]
+  },
+  {
+    day: "Day 2",
+    date: "01/11",
+    location: "堅尼地城, 中環 & 銅鑼灣",
+    attire: "舒適平底鞋, 輕便背包",
+    weatherTip: "多雲，微風舒適 (16°C)",
+    events: [
+      { 
+        time: "09:00", 
+        category: "Transportation",
+        title: "前往堅尼地城", 
+        desc: "地鐵：油麻地 → 中環 → 堅尼地城 (港島線終點)。",
+        tags: ["交通"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=堅尼地城站"
+      },
+      { 
+        time: "09:30", 
+        category: "Sightseeing",
+        title: "堅尼地城海旁 (電車總站)", 
+        desc: "在海邊散步拍照，感受西區慢生活。拍攝經典的電車總站照片。",
+        tags: ["必拍", "景點"],
+        photoTip: "拍攝雙層電車在城市中穿梭的經典畫面。",
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=堅尼地城電車總站"
+      },
+      { 
+        time: "11:00", 
+        category: "Sightseeing",
+        title: "中環街市 (Central Market)", 
+        desc: "活化後的歷史建築，結合美食、文創與休憩空間。地鐵出口即達。",
+        tags: ["購物", "景點"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=中環街市"
+      },
+      { 
+        time: "12:30", 
+        category: "Food",
+        title: "午餐：蘭芳園 & 甜點巡禮", 
+        desc: "蘭芳園 (結志街)：必點絲襪奶茶、蔥油雞扒撈丁。甜點：Hashtag B 或 Vission Bakery。",
+        tags: ["必吃", "美食", "懷舊"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=中環蘭芳園結志街"
+      },
+      { 
+        time: "14:30", 
+        category: "Activity",
+        title: "中環半山手扶梯 & 大館", 
+        desc: "體驗電影場景。參觀大館 (Tai Kwun)，活化後的舊中區警署建築群。",
+        tags: ["活動", "必拍"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=大館%20Tai%20Kwun"
+      },
+      { 
+        time: "16:00", 
+        category: "Sightseeing",
+        title: "太平山頂 (The Peak)", 
+        desc: "步行至花園道纜車總站，搭乘山頂纜車上山，欣賞日落。",
+        tags: ["景點"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=太平山頂"
+      },
+      { 
+        time: "18:30", 
+        category: "Food",
+        title: "晚餐：銅鑼灣覓食 (沾仔記)", 
+        desc: "搭地鐵或懷舊電車前往銅鑼灣。晚餐可考慮沾仔記 (米其林推薦雲吞麵)。",
+        tags: ["美食"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=沾仔記銅鑼灣"
+      },
+      { 
+        time: "20:30", 
+        category: "Shopping",
+        title: "銅鑼灣購物 & 逛街", 
+        desc: "逛 SOGO、時代廣場等百貨公司。",
+        tags: ["購物"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=銅鑼灣時代廣場"
+      }
+    ]
+  },
+  {
+    day: "Day 3",
+    date: "01/12",
+    location: "佐敦, 九龍站 & 深井",
+    attire: "運動鞋, 防盜貼身包",
+    weatherTip: "晴朗多雲，人潮眾多 (17°C)",
+    events: [
+      { 
+        time: "09:30", 
+        category: "Food",
+        title: "早餐：澳洲牛奶公司 (佐敦)", 
+        desc: "步行約 10-15 分鐘至佐敦。必點：炒蛋多士、蛋白燉鮮奶。",
+        tags: ["必吃", "美食"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=澳洲牛奶公司%20佐敦"
+      },
+      { 
+        time: "11:00", 
+        category: "Sightseeing",
+        title: "西九文化區 (M+ 博物館外觀)", 
+        desc: "從佐敦搭小巴或步行。在海濱長廊散步，參觀 M+ 博物館外觀拍照。",
+        tags: ["景點", "必拍"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=西九文化區M+博物館"
+      },
+      { 
+        time: "13:30", 
+        category: "Food",
+        title: "午餐：祥興記上海生煎包", 
+        desc: "推薦黑松露生煎包、招牌生煎包。",
+        tags: ["美食"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=祥興記上海生煎包"
+      },
+      { 
+        time: "15:00", 
+        category: "Sightseeing",
+        title: "Sky100 觀景台 (九龍站)", 
+        desc: "地鐵：佐敦 → 九龍站 (ICC)。香港最高室內觀景台，適合下午茶或拍照。",
+        tags: ["景點"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=Sky100香港觀景台"
+      },
+      { 
+        time: "17:00", 
+        category: "Transportation",
+        title: "出發前往深井 (裕記燒鵝)", 
+        desc: "可搭地鐵至荃灣西站後轉巴士，或直接從九龍站搭計程車 (約 HKD $120-150)。",
+        tags: ["交通", "重要"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=深井村"
+      },
+      { 
+        time: "18:00", 
+        category: "Food",
+        title: "晚餐：裕記大飯店 (深井燒鵝)", 
+        desc: "重頭戲：品嚐深井炭燒燒鵝。建議點半隻燒鵝。",
+        tags: ["必吃", "美食"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=裕記大飯店深井"
+      },
+      { 
+        time: "20:30", 
+        category: "Shopping",
+        title: "返回旺角/油麻地 & 逛街", 
+        desc: "搭巴士/地鐵返回市區。若還有體力，可逛旺角波鞋街或朗豪坊。",
+        tags: ["購物"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=旺角波鞋街"
+      }
+    ]
+  },
+  {
+    day: "Day 4",
+    date: "01/13",
+    location: "油麻地 & 機場",
+    attire: "舒適輕便，預備登機",
+    weatherTip: "溫暖晴朗，適合採買 (20°C)",
+    events: [
+      { 
+        time: "09:00", 
+        category: "Food",
+        title: "早餐：義順牛奶公司", 
+        desc: "油麻地彌敦道有分店。必點：雙皮燉奶、火腿通粉。",
+        tags: ["必吃", "美食"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=義順牛奶公司%20油麻地"
+      },
+      { 
+        time: "10:00", 
+        category: "Shopping",
+        title: "伴手禮採買 (Bakehouse & 珍妮曲奇)", 
+        desc: "地鐵至尖沙咀 (漢口道)。必買：Bakehouse 酸種蛋塔 (建議一開店就去)；附近有珍妮曲奇 (小熊餅乾)。",
+        tags: ["必買", "購物"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=Bakehouse%20尖沙咀"
+      },
+      { 
+        time: "12:00", 
+        category: "Accommodation",
+        title: "飯店退房 & 午餐", 
+        desc: "回城景國際退房，行李寄放櫃台。午餐可選懷舊的美都餐室或隨意燒臘飯。",
+        tags: ["重要", "酒店", "美食"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=美都餐室"
+      },
+      { 
+        time: "14:00", 
+        category: "Transportation",
+        title: "前往香港國際機場", 
+        desc: "飛機 17:35 起飛，建議 14:30 左右出發。可搭 A21 巴士或地鐵至九龍站轉機場快線。",
+        tags: ["交通", "重要"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=香港國際機場"
+      },
+      { 
+        time: "15:30", 
+        category: "Shopping",
+        title: "機場最後衝刺購物", 
+        desc: "香港機場有 Disney Store，可作最後周邊採買。",
+        tags: ["購物"],
+        gmapsUrl: "https://www.google.com/maps/search/?api=1&query=香港國際機場%20免稅店"
+      }
+    ]
+  }
+];
+
+// -----------------------------------------------------------------------------
+// 指南數據 (GUIDE_DATA) - 根據香港主題更新
+// -----------------------------------------------------------------------------
+
+const GUIDE_DATA = [
+  { 
+    category: "交通卡 (八達通)", 
+    color: "bg-green-100 text-green-700", // 綠色：八達通
+    icon: <Train size={20} />,
+    items: ["八達通必備 (便利店、交通、餐廳)", "地鐵 MTR、巴士、渡輪皆可用", "左側通行 (搭手扶梯靠左站立)"] 
+  },
+  { 
+    category: "穿著與氣候", 
+    color: "bg-red-100 text-red-700",
+    icon: <Shirt size={20} />,
+    items: ["一月清涼 (約 16-20°C)，長袖衣物為主", "輕便外套/薄羽絨 (室內冷氣強勁)", "舒適耐走的平底鞋 (樓梯和坡道多)"] 
+  },
+  { 
+    category: "美食文化", 
+    color: "bg-yellow-100 text-yellow-700", // 黃色：金牌美食
+    icon: <Utensils size={20} />,
+    items: ["茶餐廳文化 (奶茶、多士、炒蛋)", "街頭小食 (魚蛋、雞蛋仔)", "部分傳統茶餐廳只收港幣現金"] 
+  },
+  { 
+    category: "備忘與 App", 
+    color: "bg-gray-200 text-gray-700",
+    icon: <Info size={20} />,
+    items: ["電壓 220V (英式三腳插頭)", "推薦 App: MTR Mobile (地鐵), OpenRice (餐廳)", "購物使用港幣 (HKD)"] 
+  }
+];
+
+// -----------------------------------------------------------------------------
+// 天氣數據 (WEATHER_DATA) - 根據香港一月氣候調整
+// -----------------------------------------------------------------------------
+
+const WEATHER_DATA = [
+  { day: "今天 (1/10)", temp: "18°", status: "晴朗/多雲", icon: <Sun size={32} className="text-yellow-500" /> },
+  { day: "週日 (1/11)", temp: "16°", status: "微風舒適", icon: <Wind size={32} className="text-gray-400" /> },
+  { day: "週一 (1/12)", temp: "17°", status: "多雲", icon: <CloudRain size={32} className="text-blue-400" /> },
+  { day: "週二 (1/13)", temp: "20°", status: "溫暖", icon: <Sun size={32} className="text-orange-400" /> },
+];
+
+// -----------------------------------------------------------------------------
+// UI Components
+// -----------------------------------------------------------------------------
+
+// 標籤顏色對應表 (調整為港風配色)
+const TAG_COLORS = {
+  "必吃": "bg-red-600 text-white", 
+  "必拍": "bg-yellow-600 text-white", 
+  "必買": "bg-orange-600 text-white",
+  "活動": "bg-gray-700 text-white", // 沉穩
+  "景點": "bg-green-600 text-white",
+  "美食": "bg-red-300 text-red-800",
+  "酒店": "bg-gray-400 text-gray-800", 
+  "交通": "bg-blue-300 text-blue-800",
+  "重要": "bg-red-800 text-white", 
+  "懷舊": `bg-[${ACCENT_COLOR}] text-gray-800`, // 使用老金色
+  "購物": "bg-purple-500 text-white",
+};
+
+// 景點卡片 (Spot Card)
+const SpotCard = ({ event, isLast }) => {
+    // 獲取圖標
+    const getCategoryIcon = (category) => {
+        switch (category) {
+            case 'Food': return <Utensils size={18} />;
+            case 'Activity': return <Wind size={18} />;
+            case 'Sightseeing': return <Camera size={18} />;
+            case 'Accommodation': return <Pin size={18} />;
+            case 'Transportation': return <Train size={18} />;
+            case 'Shopping': return <ShoppingBag size={18} />;
+            default: return <Pin size={18} />;
+        }
+    };
+
+    const tags = event.tags || [];
+
+    return (
+        <div className="flex gap-4 mb-1">
+            {/* Time Column */}
+            <div className="flex flex-col items-end min-w-[50px] pt-1">
+                <span className="text-sm font-bold text-[#A63A39]">{event.time}</span>
+            </div>
+
+            {/* Line & Dot */}
+            <div className="flex flex-col items-center">
+                <div className={`w-4 h-4 rounded-full bg-[${ACCENT_COLOR}] border-3 border-white shadow-md z-10 flex items-center justify-center text-gray-800 p-0.5`}>
+                    {getCategoryIcon(event.category)}
+                </div>
+                {!isLast && <div className="w-0.5 flex-1 bg-gray-300 my-1"></div>}
+            </div>
+
+            {/* Content Card */}
+            <div className="flex-1 pb-6">
+                <div className="bg-white p-4 rounded-3xl shadow-lg border-t-4 border-gray-100 hover:shadow-xl transition-shadow">
+                    
+                    {/* Header: Title and Tags */}
+                    <div className="flex justify-between items-start mb-2">
+                        <span className="text-lg font-bold text-gray-800">{event.title}</span>
+                        {/* 導航按鈕使用正確的 gmapsUrl */}
+                        <a 
+                            href={event.gmapsUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-1 text-xs text-white bg-green-600 px-3 py-1 rounded-full hover:bg-green-700 transition-colors shadow-md`}
+                        >
+                            <Globe size={12} /> 導航
+                        </a>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1 mb-3">
+                        {tags.map((tag, idx) => (
+                            <span 
+                                key={idx} 
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[tag] || 'bg-gray-200 text-gray-800'}`}
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-sm text-gray-600 leading-relaxed mb-4">{event.desc}</p>
+
+                    {/* Parking & Photo Tip Area */}
+                    {(event.parkingInfo || event.photoTip) && (
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 mb-3 space-y-2">
+                            {event.parkingInfo && (
+                                <div className="flex items-start text-xs text-gray-600 gap-2">
+                                    <Car size={14} className="flex-shrink-0 text-blue-500 mt-0.5" />
+                                    <span>停車資訊: {event.parkingInfo}</span>
+                                </div>
+                            )}
+                            {event.photoTip && (
+                                <div className="flex items-start text-xs text-gray-600 gap-2">
+                                    <Camera size={14} className="flex-shrink-0 text-[#A63A39] mt-0.5" />
+                                    <span>拍照小技巧: {event.photoTip}</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Travelogue/Journal UI (Mock Functionality) */}
+                    <div className="flex justify-around text-xs font-medium text-gray-500 mt-4 border-t pt-3 border-gray-100">
+                        <button className={`flex items-center gap-1 hover:text-[${PRIMARY_COLOR}] transition-colors`}>
+                            <Upload size={14} /> 上傳照片
+                        </button>
+                        <button className={`flex items-center gap-1 hover:text-[${PRIMARY_COLOR}] transition-colors`}>
+                            <FileText size={14} /> 新增筆記
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// 每日卡片 (Day Card) - 現在是主行程顯示區
+const ItineraryView = ({ dayData }) => (
+  <div className="mb-8">
+    
+    {/* Daily Header: Date and Location */}
+    <div className="flex items-center justify-between mb-4 px-2">
+      <div className="flex items-baseline gap-2">
+        <span className={`text-2xl font-bold text-[${PRIMARY_COLOR}] tracking-tighter`}>{dayData.day}</span>
+        <span className="text-sm text-gray-500 font-medium">{dayData.date}</span>
+      </div>
+      <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm text-xs text-gray-600 border border-gray-200">
+        <MapPin size={12} className="text-[#A63A39]" />
+        {dayData.location}
+      </div>
+    </div>
+    
+    {/* Timeline of Events (using new SpotCard) */}
+    <div className="pl-2">
+      {dayData.events.map((event, idx) => (
+        <SpotCard key={idx} event={event} isLast={idx === dayData.events.length - 1} />
+      ))}
+    </div>
+
+    {/* Daily Footer: Attire and Weather Tip */}
+    <div className={`mx-2 mt-6 p-4 rounded-3xl bg-[${ACCENT_COLOR}]/40 shadow-inner border border-yellow-200 text-gray-800`}>
+        <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+            <Shirt size={16} className={`text-[${PRIMARY_COLOR}]`} />
+            當日建議與提示 (港式穿搭/注意事項)
+        </h3>
+        <ul className="text-xs space-y-1">
+            <li className="flex justify-between">
+                <span className="font-medium">建議穿著:</span>
+                <span className="text-right">{dayData.attire}</span>
+            </li>
+            <li className="flex justify-between">
+                <span className="font-medium">氣候提示:</span>
+                <span className={`text-right font-semibold text-[${PRIMARY_COLOR}]`}>{dayData.weatherTip}</span>
+            </li>
+        </ul>
+    </div>
+  </div>
+);
+
+const TabButton = ({ active, label, icon, onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 ${active ? `text-[${PRIMARY_COLOR}] transform -translate-y-1` : 'text-gray-500'}`}
+  >
+    <div className={`p-1.5 rounded-full mb-1 transition-colors ${active ? `bg-[${PRIMARY_COLOR}]/10` : 'bg-transparent'}`}>
+      {icon}
+    </div>
+    <span className="text-[10px] font-medium tracking-widest">{label}</span>
+  </button>
+);
+
+const GuideCard = ({ item }) => (
+  <div className="bg-white p-5 rounded-3xl shadow-md border border-gray-100 mb-4">
+    <div className="flex items-center gap-3 mb-4">
+      <div className={`p-2 rounded-2xl ${item.color}`}>
+        {item.icon}
+      </div>
+      <h3 className="font-bold text-gray-700">{item.category}</h3>
+    </div>
+    <ul className="space-y-3">
+      {item.items.map((point, idx) => (
+        <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+          <div className={`mt-1.5 w-1.5 h-1.5 rounded-full bg-[${PRIMARY_COLOR}] flex-shrink-0`}></div>
+          <span className="leading-relaxed">{point}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+const WeatherCard = ({ data }) => (
+  <div className="bg-white/80 backdrop-blur-sm p-4 rounded-3xl flex flex-col items-center justify-center gap-2 shadow-sm min-w-[80px]">
+    <span className="text-xs text-gray-500 font-medium">{data.day}</span>
+    {data.icon}
+    <span className="text-lg font-bold text-gray-700">{data.temp}</span>
+  </div>
+);
+
+// -----------------------------------------------------------------------------
+// Main Application Component
+// -----------------------------------------------------------------------------
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('itinerary');
+  // 設置 Day 4 為 3 (0-indexed)
+  const [currentDayIndex, setCurrentDayIndex] = useState(0); 
+
+  const currentDayData = ITINERARY_DATA[currentDayIndex];
+
+  return (
+    // Import Google Font: Zen Maru Gothic
+    <div className={`min-h-screen bg-[${BG_COLOR}] text-gray-700 font-sans pb-24 relative overflow-hidden select-none`}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
+        body { font-family: 'Zen Maru Gothic', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .glass-nav {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        .day-tab {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Fade In Animation for Itinerary Change */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+      `}</style>
+
+      {/* Decorative Background Circles (Adjusted for HK warm tone) */}
+      <div className="absolute top-[-100px] left-[-50px] w-64 h-64 bg-red-100 rounded-full blur-3xl opacity-40 pointer-events-none"></div>
+      <div className="absolute bottom-[20%] right-[-20px] w-48 h-48 bg-yellow-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
+      {/* ----------------- HEADER ----------------- */}
+      <header className={`relative px-6 pt-12 pb-6 bg-gradient-to-b from-[#E6DCE0] to-[${BG_COLOR}]`}>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <span className={`inline-block px-3 py-1 bg-white/70 rounded-full text-[10px] text-[${PRIMARY_COLOR}] font-bold tracking-wider mb-2 backdrop-blur-sm border border-white/50`}>
+              還有 {TRIP_INFO.daysLeft} 天
+            </span>
+            <h1 className={`text-2xl font-bold text-[${PRIMARY_COLOR}] tracking-wide mb-1`}>
+              {TRIP_INFO.title}
+            </h1>
+            <div className="flex items-center text-gray-500 text-sm gap-1">
+              <Calendar size={14} />
+              <span>{TRIP_INFO.date}</span>
+            </div>
+          </div>
+          {/* 使用 Camera 圖標代表觀光/拍照 */}
+          <div className={`w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center text-[${PRIMARY_COLOR}]`}>
+            <Camera size={20} />
+          </div>
+        </div>
+      </header>
+
+      {/* ----------------- CONTENT AREA ----------------- */}
+      <main className="px-6 relative z-10">
+        
+        {/* VIEW: ITINERARY (行程) */}
+        {activeTab === 'itinerary' && (
+          <div className="pt-4">
+            
+            {/* Day Selection Tabs */}
+            {/* 調整為四個按鈕 */}
+            <div className="flex justify-between bg-white p-2 rounded-2xl shadow-md mb-6 sticky top-0 z-20">
+              {ITINERARY_DATA.map((dayData, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentDayIndex(index)}
+                  className={`day-tab flex-1 text-center py-2 text-sm font-medium rounded-xl 
+                    ${currentDayIndex === index 
+                      ? `bg-[${PRIMARY_COLOR}] text-white shadow-lg shadow-red-900/20` 
+                      : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                >
+                  {dayData.day}
+                </button>
+              ))}
+            </div>
+
+            {/* Display Current Day's Itinerary */}
+            <div key={currentDayIndex} className="animate-fade-in">
+                <ItineraryView dayData={currentDayData} />
+            </div>
+
+            <div className="h-8"></div> {/* Spacer */}
+          </div>
+        )}
+
+        {/* VIEW: GUIDE (指南) */}
+        {activeTab === 'guide' && (
+          <div className="grid gap-2 pt-4">
+            <div className={`bg-[${PRIMARY_COLOR}] rounded-3xl p-6 text-white mb-4 shadow-lg shadow-red-900/10 relative overflow-hidden`}>
+              {/* 使用 Globe 代表國際旅行 */}
+              <Globe className="absolute top-[-10px] right-[-10px] opacity-10 w-32 h-32" /> 
+              <h2 className="text-lg font-bold mb-2">港式旅行小貼士</h2>
+              <p className="text-red-100 text-sm opacity-90">香港步調快，建議出發前規劃好交通和餐廳，以節省時間！</p>
+            </div>
+            {GUIDE_DATA.map((item, idx) => (
+              <GuideCard key={idx} item={item} />
+            ))}
+          </div>
+        )}
+
+        {/* VIEW: WEATHER (天氣) */}
+        {activeTab === 'weather' && (
+          <div className="flex flex-col items-center pt-4">
+            {/* Main Current Weather */}
+            <div className={`bg-gradient-to-br from-[#d99090] to-[${PRIMARY_COLOR}] w-full rounded-[40px] p-8 text-white shadow-xl shadow-red-900/20 mb-8 relative overflow-hidden`}>
+               <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                  {/* Decorative pattern */}
+                  <div className={`absolute top-4 left-10 w-4 h-4 rounded-full bg-[${ACCENT_COLOR}]`}></div>
+                  <div className={`absolute bottom-10 right-10 w-8 h-8 rounded-full bg-[${ACCENT_COLOR}]`}></div>
+               </div>
+               
+               <div className="flex justify-between items-start mb-8">
+                 <div>
+                   <h2 className="text-3xl font-bold">香港</h2>
+                   <p className="opacity-80 text-sm">現在</p>
+                 </div>
+                 <Wind size={24} className="opacity-80" />
+               </div>
+               
+               <div className="flex items-center justify-between">
+                 <div className="flex flex-col">
+                   <span className="text-6xl font-bold tracking-tighter">18°</span>
+                   <span className="text-red-200 mt-1">體感溫度 19°</span>
+                 </div>
+                 <Sun size={80} className="text-yellow-300 drop-shadow-lg" />
+               </div>
+            </div>
+
+            {/* Forecast Grid */}
+            <div className="w-full">
+              <h3 className="text-gray-500 font-bold mb-4 ml-2">未來預報</h3>
+              <div className="grid grid-cols-4 gap-3">
+                {WEATHER_DATA.map((data, idx) => (
+                  <WeatherCard key={idx} data={data} />
+                ))}
+              </div>
+            </div>
+
+            {/* Clothing Tip */}
+            <div className="w-full mt-6 bg-white p-4 rounded-2xl shadow-sm flex items-center gap-3">
+              <div className="bg-orange-100 p-2 rounded-full text-orange-500">
+                <Shirt size={18} />
+              </div>
+              <div className="text-sm">
+                <span className="font-bold text-gray-700 block">今日穿搭建議</span>
+                <span className="text-gray-500">薄長袖、輕便外套、長褲</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* ----------------- BOTTOM NAVIGATION ----------------- */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md z-50">
+        <nav className="glass-nav rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] h-16 flex items-center justify-around px-2">
+          <TabButton 
+            active={activeTab === 'itinerary'} 
+            onClick={() => setActiveTab('itinerary')}
+            label="行程"
+            icon={<Calendar size={20} strokeWidth={2.5} />} 
+          />
+          <TabButton 
+            active={activeTab === 'guide'} 
+            onClick={() => setActiveTab('guide')}
+            label="指南"
+            icon={<Coffee size={20} strokeWidth={2.5} />} 
+          />
+          <TabButton 
+            active={activeTab === 'weather'} 
+            onClick={() => setActiveTab('weather')}
+            label="天氣"
+            icon={<CloudRain size={20} strokeWidth={2.5} />} 
+          />
+        </nav>
+      </div>
+    </div>
+  );
+}
